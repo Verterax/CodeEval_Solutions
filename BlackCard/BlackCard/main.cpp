@@ -1,0 +1,142 @@
+// By Christopher Caldwell
+// chris@codehadouken.com
+// Challenge 222
+// Black Card
+
+#include <iostream>
+#include <fstream> //fileStream
+#include <string>
+#include <sstream>
+#include <vector>
+//#include <algorithm> //Sort
+//#include <iomanip> //printf
+//#include <ctype.h> //tolower, toUpper
+using namespace std;
+
+#pragma region Defaults
+
+//Reads a file, and returns the 
+//contents as a vector of strings
+vector<string> GetLines(string fileName)
+{
+	string line;
+	vector<string> lines;
+	ifstream file(fileName);
+
+	if (file.is_open())
+	{
+		while (getline(file, line))
+		{
+			lines.push_back(line);
+		}
+	}
+	else
+	{
+		cout << "Unable to open file.\n";
+	}
+	file.close();
+
+	return lines;
+}
+
+//Parses tokens out of a string
+//Using a specified char as the delimiter.
+vector<string> GetTokens(string line, char delim)
+{
+	vector<string> tokens;
+	string token;
+	stringstream stream(line);
+	while (std::getline(stream, token, delim))
+	{
+		tokens.push_back(token);
+	}
+
+	return tokens;
+}
+
+//Parses numeric tokens out of a string
+//using the specified char as the delimiter.
+//Returns a vector of ints
+vector<int> GetInts(string line, char delim)
+{
+	vector<int> tokens;
+	string token;
+	stringstream stream(line);
+	while (std::getline(stream, token, delim))
+	{
+		tokens.push_back(atoi(token.c_str()));
+	}
+
+	return tokens;
+}
+
+
+//Takes a string by reference and removes
+//matching chars found in the chars[] array.
+void RemChars(string& str, const char chars[], int charLen)
+{
+	string::iterator iter = str.begin();
+	bool didErase = false;
+	while (iter != str.end())
+	{
+		didErase = false;
+		for (int i = 0; i < charLen; i++)
+			if ((*iter) == chars[i])
+			{
+				str.erase(iter);
+				didErase = true;
+				break;
+			}
+		if (!didErase) iter++;
+	}
+}
+
+//Template function set to run on each
+//line read from the text file.
+void TemplateFunction(string line)
+{
+	vector<string> tokens = GetTokens(line, '|');
+	char arr[] = {' '};
+	RemChars(tokens[1], arr, tokens.size());
+	int gameN = atoi(tokens[1].c_str());
+	vector<string> players = GetTokens(tokens[0], ' ');
+
+	vector<string>::iterator player;
+	while (players.size() > 1)
+	{
+		for (int n = 0; n < gameN; n++)
+		{
+			if (n == 0)
+				player = players.begin();
+			else
+				player++;
+			
+			if (player == players.end()) player = players.begin();
+		}
+
+		players.erase(player);
+	}
+
+	cout << players[0] << endl;
+}
+
+int main(int argc, char* argv[])
+{
+	if (argc == 1) { cout << "No file\n" << endl; return 0; }
+
+	//Reads text-file lines into vector of strings.
+	vector<string> lines = GetLines(argv[1]);
+
+	int lineCount = lines.size();
+	if (lineCount == 0) { cout << "No lines\n"; return 0; }
+
+	for (int i = 0; i < lineCount; i++)
+	{
+		//Evaluate lines.
+		TemplateFunction(lines[i]);
+	}
+
+	return 0;
+}
+
+#pragma endregion

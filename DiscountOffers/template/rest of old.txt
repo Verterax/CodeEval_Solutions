@@ -1,0 +1,196 @@
+
+
+	//Subtract Max, leave absolute.
+	for (y = 0; y < people.size(); ++y) //y = people
+		for (x = 0; x < products.size(); ++x) //x = products
+		{
+			peopleProducts[y][x] = abs(peopleProducts[y][x] - maxSS);
+		}
+
+	//If more people than products, add dummy item
+	if (people.size() > products.size())
+	{
+		products.push_back("Dummy Item");
+		for (y = 0; y < people.size(); ++y)
+		{
+			peopleProducts[y].push_back(maxSS);
+			tableCopy[y].push_back(0);
+		}
+
+	}
+
+	int size = people.size();
+	
+	if (printTables)
+	{
+		PrintTable(peopleProducts, size);
+		cout << "Tables squred and inverted." << endl;
+		cout << endl;
+	}
+		
+
+
+	//Refine solution.
+	vector<int> peopleZeros; // y  (zero count, line drawn)
+	vector<int> productZeros; // x (zero count, line drawn)
+	int timeout = 0;
+	while (linesDrawn != people.size() && timeout < 5)
+	{
+		sum = 0;
+		vote = linesDrawn = 0;
+		min = maxDouble;
+		peopleZeros.clear();
+		peopleZeros.resize(people.size());
+		productZeros.clear();
+		productZeros.resize(products.size());
+		
+
+		for (y = 0; y < people.size(); ++y) //y = people
+		{
+			for (i = 0; i < 2; ++i) //Rows and col. Find min on first pass.
+			{
+				if (i == 0) min = maxDouble;
+
+				for (x = 0; x < products.size(); ++x) //x = products
+				{
+					if (i == 0) // Get min for row.
+					{
+						if (peopleProducts[y][x] < min)
+							min = peopleProducts[y][x];
+					}
+					else
+					{
+						peopleProducts[y][x] -= min;
+					}
+				}
+			}
+		}
+
+		if (printTables)
+		{
+			PrintTable(people, products, peopleProducts, peopleZeros, productZeros);
+			cout << "Row mins subtacted." << endl;
+			cout << endl;
+		}
+
+		for (y = 0; y < people.size(); ++y) //y = people
+		{
+			for (i = 0; i < 2; ++i) //Rows and col. Find min on first pass.
+			{
+				if (i == 0) min = maxDouble;
+				for (x = 0; x < products.size(); ++x) //x = products
+				{
+					if (i == 0) // Get min for row.
+					{
+						if (peopleProducts[x][y] < min)
+							min = peopleProducts[x][y];
+					}
+					else
+					{
+						peopleProducts[x][y] -= min;
+					}
+
+					//Count row/col zeros.
+					if (peopleProducts[x][y] == 0 && i == 1)
+					{
+						peopleZeros[x]++;
+						productZeros[y]++;
+					}
+				}
+			}
+		}
+
+		if (printTables)
+		{
+			PrintTable(people, products, peopleProducts, peopleZeros, productZeros);
+			cout << "Column Mins subtracted. Zeros per row col counted." << endl;
+			cout << endl;
+		}
+
+		//Get votes on drawing row lines.
+		for (y = 0; y < people.size(); ++y)
+		{
+			vote = 0;
+			for (x = 0; x < products.size(); ++x)
+			{
+				if (peopleZeros[y] > productZeros[x])
+					vote++;
+				else if (peopleZeros[y] < productZeros[x])
+					vote--;
+			}
+			if (vote > 0)
+			{
+				linesDrawn++;
+				peopleZeros[y] = 1;
+			}
+			else
+				peopleZeros[y] = 0;				
+		}
+
+		//Get votes on drawing column lines.
+		for (y = 0; y < peopleZeros.size(); ++y)
+		{
+			productZeros[y] = 0;
+			if (peopleZeros[y] == 0)
+			{				
+				for (x = 0; x < products.size(); ++x)
+				{
+					if (peopleProducts[y][x] == 0)
+					{
+						if (productZeros[x] == 0)
+						{
+							linesDrawn++;
+							productZeros[x] = 1;
+						}											
+					}
+				}
+			}
+		}
+
+		if (printTables)
+		{
+			PrintTable(people, products, peopleProducts, peopleZeros, productZeros);
+			cout << "Tables squred and inverted." << endl;
+			cout << endl;
+		}
+			
+
+		//If lines drawn == table size, break and get assignments.
+		if (linesDrawn == people.size())
+			break;
+
+		//Get min from all uncovered numbers.
+		min = maxDouble;
+		for (y = 0; y < peopleZeros.size(); ++y)
+			for (x = 0; x < productZeros.size(); ++x)
+				if (peopleZeros[y] == 0 && productZeros[x] == 0)
+					if (peopleProducts[y][x] < min) 
+						min = peopleProducts[y][x];
+
+		//Remove min from all uncovered numbers.
+		for (y = 0; y < peopleZeros.size(); ++y)
+			for (x = 0; x < productZeros.size(); ++x)
+				if (peopleZeros[y] == 0 && productZeros[x] == 0)
+					peopleProducts[y][x] -= min;
+
+		if (printTables)
+		{
+			PrintTable(people, products, peopleProducts, peopleZeros, productZeros);
+			cout << "Drawn lines = " << linesDrawn << " of " << people.size() << " Subtracted min from all uncovered rows." << endl;
+			cout << "Looping..." << endl;
+		}
+		timeout++;
+	} //End refinement loop
+	
+
+	//Get Rows and cols with priority assignments
+	PrintTable(people, products, peopleProducts, peopleZeros, productZeros);
+	vector<pair<int, int>> assignments = GetAssignments(peopleProducts, people.size());
+
+
+	PrintTable(people, products, peopleProducts, peopleZeros, productZeros);
+
+	double result = GetSum(tableCopy, assignments);
+	cout << result << endl;
+
+		//return MaxSum
